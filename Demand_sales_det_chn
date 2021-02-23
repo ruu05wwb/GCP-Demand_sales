@@ -1,0 +1,108 @@
+CREATE OR REPLACE VIEW `amw-dna-coe-working-dev`.demand_sales.demand_sales_det_chn AS SELECT T1.ORD_NO_CHAR,
+    T1.ORD_NO,
+    T1.COMB_ORD_NO,
+    T1.ORD_LN_NO,
+    T1.CURCY_KEY_NO,
+    T1.OPER_CNTRY_KEY_NO,
+    T1.OPER_AFF_KEY_NO,
+    T1.ORD_DT_KEY_NO,
+    T1.SHP_DT_KEY_NO,
+    T1.ORD_MO_YR_KEY_NO,
+    T1.BILL_IMC_BUS_NATR,
+    T1.COMB_ORD_FLG,
+    T1.ORD_CHANNEL,
+    T1.CONSULTANT_ID,
+    T1.PV_LC_AMT,
+    T1.BV_LC_AMT,
+    T1.IBO_PRICE_LC_AMT,
+    T1.SHP_QTY,
+    T1.ORD_QTY,
+    T1.DELIVERYMODE,
+    T1.VOL_IMC_KEY_NO,
+    T1.ORD_IMC_KEY_NO,
+    T1.SHP_IMC_KEY_NO,
+    CASE
+      WHEN coalesce(T1.IMC_KEY_NO,0)=0
+      THEN T1.IMC_NO
+      ELSE T1.IMC_KEY_NO
+    END AS IMC_KEY_NO,
+    T1.IMC_NO,
+    CASE
+      WHEN T1.OPER_AFF_KEY_NO=29
+      THEN 350
+      WHEN T1.OPER_AFF_KEY_NO=21
+      THEN 220
+      WHEN T1.OPER_AFF_KEY_NO=10
+      THEN 100
+      WHEN T1.OPER_AFF_KEY_NO=6
+      THEN 60
+      WHEN T1.OPER_AFF_KEY_NO=7
+      THEN 70
+      WHEN T1.OPER_AFF_KEY_NO=42
+      THEN 500
+      WHEN T1.OPER_AFF_KEY_NO=17
+      THEN 180
+      WHEN T1.OPER_AFF_KEY_NO=15
+      THEN 160
+      WHEN T1.OPER_AFF_KEY_NO=2
+      THEN 10
+      WHEN T1.OPER_AFF_KEY_NO=11
+      THEN 110
+      WHEN T1.OPER_AFF_KEY_NO=9
+      THEN 90
+      WHEN T1.OPER_AFF_KEY_NO=33
+      THEN 420
+      WHEN T1.OPER_AFF_KEY_NO=36
+      THEN 470
+      WHEN T1.OPER_AFF_KEY_NO=19
+      THEN 200
+      WHEN T1.OPER_AFF_KEY_NO=41
+      THEN 999
+      WHEN T1.OPER_AFF_KEY_NO=39
+      THEN 570
+      WHEN T1.OPER_AFF_KEY_NO=30
+      THEN 360
+      WHEN T1.OPER_AFF_KEY_NO=14
+      THEN 150
+      WHEN T1.OPER_AFF_KEY_NO=3
+      THEN 30
+      WHEN T1.OPER_AFF_KEY_NO=4
+      THEN 40
+      WHEN T1.OPER_AFF_KEY_NO=37
+      THEN 480
+      WHEN T1.OPER_AFF_KEY_NO=34
+      THEN 430
+      WHEN T1.OPER_AFF_KEY_NO=12
+      THEN 130
+      WHEN T1.OPER_AFF_KEY_NO=16
+      THEN 170
+      WHEN T1.OPER_AFF_KEY_NO=24
+      THEN 250
+      WHEN T1.OPER_AFF_KEY_NO=20
+      THEN 210
+      ELSE NULL
+    END *POWER(10,11)+IMC_NO-
+   CASE
+    WHEN OPER_AFF_KEY_NO IN(3,39)
+    THEN
+      CASE
+        WHEN SUBSTR(CAST(IMC_NO AS STRING),1,3)='570'
+        THEN 570*(POWER(10, FLOOR(LOG(10, IMC_NO))-2))
+        ELSE 0
+      END
+    ELSE 0
+  END AS GLOBL_CUST_ID,
+    T1.ORD_ITEM_KEY_NO,
+    T1.SHP_ITEM_KEY_NO,
+    T1.WHSE_KEY_NO,
+    T1.CURR_APPL_DT_KEY_NO,
+    T1.IMC_CNTRY_KEY_NO,
+    T1.IMC_TYPE,
+    T1.IBO_PRICE_LC_AMT*T2.TO_USD_BUDGT_EXCHG_RT AS USD,
+    T1.BV_LC_AMT       *T2.TO_USD_BUDGT_EXCHG_RT AS BV_USD,
+  (SELECT TIMESTAMP_MILLIS(last_modified_time)
+FROM `amw-dna-ingestion-prd.gdw_atomic.__TABLES__` where table_id = 'demand_sales_det_raw_chn') AS UPDATE_DT
+FROM `amw-dna-ingestion-prd`.gdw_atomic.demand_sales_det_raw_chn T1
+LEFT JOIN `amw-dna-coe-working-dev`.ingested.exch_rates T2
+  ON T1.OPER_CNTRY_KEY_NO=T2.CNTRY_KEY_NO
+  AND T1.CURCY_KEY_NO    =T2.CURCY_KEY_NO
